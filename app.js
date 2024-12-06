@@ -11,12 +11,14 @@ const __dirname = path.resolve()
 app.get('/', (req,res,next)=>{
     const path = '/sfu/'
     if (req.path.indexOf(path) == 0 && req.path.length > path.length) return next()
-    res.send("You need to specify a room name in the path e.g. 'https://server_ip/sfu/room'")
+    res.send("You need to specify a room name in the path e.g. 'https://127.0.0.1/sfu/room'")
 })
 app.use('/sfu/:room',express.static(path.join(__dirname, 'public')))
 
-// 인증서
-
+const options = {
+    key: fs.readFileSync('/etc/letsencrypt/live/webrtc.n-e.kr/privkey.pem','utf-8'),
+    cert: fs.readFileSync('/etc/letsencrypt/live/webrtc.n-e.kr/fullchain.pem','utf-8')
+};
 const httpsServer = https.createServer(options, app)
 httpsServer.listen(443, () =>{
     console.log("listening on port 443")
@@ -101,6 +103,12 @@ connections.on('connection', async socket => {
       peers: rooms[roomName].peers.filter(socketId => socketId !== socket.id)
     }
   })
+
+  // 방 참가하는 로직 변경해야함 . . . =>
+  // 1. 메인 페이지 (webrtc.n-e.kr)는 로그인 이후 방 참가 or 방 생성 페이지로 이동할 수 있음.
+  // 2. 방 생성의 경우 방 이름, 방 비밀번호를 입력하면 방 참가 페이지와 동일한 페이지로 이동
+  // 3. [1]에서 방 참가 페이지로 이동하면 방 번호와 비밀번호를 입력함.
+  // 4. 일치하면 해당 방으로 참여, 실패하면 방 접속 실패 . . .
 
   socket.on('joinRoom', async ({ roomName }, callback) => {
     // create Router if it does not exist
@@ -401,7 +409,7 @@ const createWebRtcTransport = async (router) => {
         listenIps: [
           {
             ip: '0.0.0.0', // replace with relevant IP address
-            announcedIp: 'server ip',
+            announcedIp: '117.16.153.134',
           }
         ],
         enableUdp: true,
