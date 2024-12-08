@@ -8,22 +8,35 @@ import mediasoup from 'mediasoup'
 const app = express()
 const __dirname = path.resolve()
 
+app.use(express.json())
+app.use(express.urlencoded({ extended : true }))
+
 // 인증서 옵션
-// 깃에서는 삭제
+const options = {
+    key: fs.readFileSync('/etc/letsencrypt/live/webrtc.n-e.kr/privkey.pem','utf-8'),
+    cert: fs.readFileSync('/etc/letsencrypt/live/webrtc.n-e.kr/fullchain.pem','utf-8')
+};
 
 const httpsServer = https.createServer(options, app)
 
-// 정적 파일 제공
-app.use(express.static(path.join(__dirname, 'public')))
+// 정적 파일 제공 
+app.use(express.static(path.join(__dirname, 'views')))
+
+// 회원 정보 저장
+const usersFile = path.join(__dirname, 'users.json')
 
 // 메인 페이지
 app.get('/', (req,res)=>{
-    res.sendFile(path.join(__dirname, 'public', 'index.html'))
+    res.sendFile(path.join(__dirname, 'views', 'index.html'))
 })
 
 // 로그인 페이지
 app.get('/login', (req,res)=>{
     res.sendFile(path.join(__dirname, 'public', 'login.html'))
+})
+
+app.get('/signup',(req,res)=>{
+  res.sendFile(path.join(__dirname,'public', 'signup.html'))
 })
 
 // 방 생성 페이지
@@ -35,6 +48,54 @@ app.get('/create-room', (req, res) => {
 app.get('/join-room', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'join-room.html'));
 });
+
+/* 회원가입 요청 처리 */
+app.post('/signup', (req,res)=>{
+  const {username, password }=req.body
+  if(!username || !password) {
+    return res.status(400).send("아이디와 비밀번호를 입력하세요.")
+  }
+
+  // 기존 유저 목록 불러오기
+  let users=[]
+  if(fs.existsSync(usersFile)) {
+    const data = fs.readFileSync(usersFile, 'utf-8')
+    users = JSON.parse(data);
+  }
+
+  // 중복 아이디 확인
+  if (users.some(user=>user.username === username)){
+    return res.status(400).send('이미 존재하는 아이디입니다.')
+  }
+  
+  // 새 유저 추가
+  users.push({username, password})
+  fs.writeFileSync(usersFile, JSON.stringify(users,null,2))
+
+  res.redirect('/login')
+})
+
+// 로그인 요청 처리
+app.post('/login', (res,req)=>{
+  const {username, password} = req.body
+
+  if (!username || password){
+    return res.status(400).send('아이디와 비밀번호를 입력하세요.')
+  }
+
+  if(!fs.existsSync(usersFile)){
+    return res.status(400).send('등록된 유저가 없습니다.')
+  }
+
+  const users = JSON.parse(fs.readFileSync(usersFile, 'utf-8'))
+  const user = users.find(user => user.username === username && user.password === password)
+
+  if (!user){
+    return res.status(401).send('아이디 또는 비밀번호가 올바르지 않습니다.')
+  }
+
+  res.redirect('/')
+})
 
 // SFU 연결
 app.use('/sfu/:room', express.static(path.join(__dirname, 'public/sfu')));
