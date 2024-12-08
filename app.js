@@ -9,10 +9,7 @@ const app = express()
 const __dirname = path.resolve()
 
 // 인증서 옵션
-const options = {
-    key: fs.readFileSync('/etc/letsencrypt/live/webrtc.n-e.kr/privkey.pem','utf-8'),
-    cert: fs.readFileSync('/etc/letsencrypt/live/webrtc.n-e.kr/fullchain.pem','utf-8')
-};
+// 깃에서는 삭제
 
 const httpsServer = https.createServer(options, app)
 
