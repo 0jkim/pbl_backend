@@ -25,8 +25,8 @@ app.get('/', (req,res)=>{
 })
 
 // 로그인 페이지
-app.get('/', (req,res)=>{
-  res.sendFile(path.join(__dirname, 'public', 'login.html'))
+app.get('/login', (req,res)=>{
+    res.sendFile(path.join(__dirname, 'public', 'login.html'))
 })
 
 // 방 생성 페이지
