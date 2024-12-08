@@ -20,7 +20,7 @@ const options = {
 const httpsServer = https.createServer(options, app)
 
 // 정적 파일 제공 
-app.use(express.static(path.join(__dirname, 'views')))
+app.use(express.static(path.join(__dirname, 'public')))
 
 // 회원 정보 저장
 const usersFile = path.join(__dirname, 'users.json')
