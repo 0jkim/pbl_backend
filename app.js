@@ -1,25 +1,48 @@
 import express from 'express'
-const app = express()
-
 import https from 'httpolyglot'
 import fs from 'fs'
 import path from 'path'
 import {Server} from 'socket.io'
 import mediasoup from 'mediasoup'
+
+const app = express()
 const __dirname = path.resolve()
 
-app.get('/', (req,res,next)=>{
-    const path = '/sfu/'
-    if (req.path.indexOf(path) == 0 && req.path.length > path.length) return next()
-    res.send("You need to specify a room name in the path e.g. 'https://127.0.0.1/sfu/room'")
-})
-app.use('/sfu/:room',express.static(path.join(__dirname, 'public')))
-
+// 인증서 옵션
 const options = {
     key: fs.readFileSync('/etc/letsencrypt/live/webrtc.n-e.kr/privkey.pem','utf-8'),
     cert: fs.readFileSync('/etc/letsencrypt/live/webrtc.n-e.kr/fullchain.pem','utf-8')
 };
+
 const httpsServer = https.createServer(options, app)
+
+// 정적 파일 제공
+app.use(express.static(path.join(__dirname, 'public')))
+
+// 메인 페이지
+app.get('/', (req,res)=>{
+    res.sendFile(path.join(__dirname, 'public', 'index.html'))
+})
+
+// 로그인 페이지
+app.get('/', (req,res)=>{
+  res.sendFile(path.join(__dirname, 'public', 'login.html'))
+})
+
+// 방 생성 페이지
+app.get('/create-room', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'create-room.html'));
+});
+
+// 방 참가 페이지
+app.get('/join-room', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'join-room.html'));
+});
+
+// SFU 연결
+app.use('/sfu/:room', express.static(path.join(__dirname, 'public/sfu')));
+
+// HTTPS 서버 시작
 httpsServer.listen(443, () =>{
     console.log("listening on port 443")
 })
