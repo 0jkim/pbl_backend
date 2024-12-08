@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Room</title>
+</head>
+<body>
+    <h1>Create a Room</h1>
+    <form action="/api/create-room" method="POST">
+        <label for="roomName">Room Name:</label>
+        <input type="text" id="roomName" name="roomName" required>
+        <br>
+        <label for="roomPassword">Room Password:</label>
+        <input type="password" id="roomPassword" name="roomPassword" required>
+        <br>
+        <button type="submit">Create Room</button>
+    </form>
+</body>
+</html>
