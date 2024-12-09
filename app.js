@@ -4,6 +4,7 @@ import fs from 'fs'
 import path from 'path'
 import {Server} from 'socket.io'
 import mediasoup from 'mediasoup'
+inport dotenv from 'dotenv'
 
 const app = express()
 const __dirname = path.resolve()
