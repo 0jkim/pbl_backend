@@ -2,20 +2,31 @@ import express from 'express'
 import https from 'httpolyglot'
 import fs from 'fs'
 import path from 'path'
-import {Server} from 'socket.io'
+import { Server } from 'socket.io'
 import mediasoup from 'mediasoup'
-inport dotenv from 'dotenv'
+import dotenv from 'dotenv'
+import session from 'express-session'
+
+dotenv.config()
 
 const app = express()
 const __dirname = path.resolve()
 
 app.use(express.json())
-app.use(express.urlencoded({ extended : true }))
+app.use(express.urlencoded({ extended: true }))
+
+// 세션 코드
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninutialized: false,
+  cookie: { secure: true }
+}))
 
 // 인증서 옵션
 const options = {
-    key: fs.readFileSync('/etc/letsencrypt/live/webrtc.n-e.kr/privkey.pem','utf-8'),
-    cert: fs.readFileSync('/etc/letsencrypt/live/webrtc.n-e.kr/fullchain.pem','utf-8')
+  key: fs.readFileSync('/etc/letsencrypt/live/webrtc.n-e.kr/privkey.pem', 'utf-8'),
+  cert: fs.readFileSync('/etc/letsencrypt/live/webrtc.n-e.kr/fullchain.pem', 'utf-8')
 };
 
 const httpsServer = https.createServer(options, app)
@@ -26,105 +37,138 @@ app.use(express.static(path.join(__dirname, 'public')))
 // 회원 정보 저장
 const usersFile = path.join(__dirname, 'users.json')
 
+// 로그인 여부 확인 미들웨어
+const isAuthenticated = (req, res, next) => {
+  if (req.session && req.session.username) {
+    return next()
+  }
+  res.redirect('/login')
+}
+
+// 로그인 상태 확인 API
+app.get('/api/auth/status', (req, res) => {
+  if (req.session && req.session.username) {
+    res.json({ loggedIn: true, username: req.session.username })
+  } else {
+    res.json({ loggedIn: false })
+  }
+})
+
 // 메인 페이지
-app.get('/', (req,res)=>{
-    res.sendFile(path.join(__dirname, 'views', 'index.html'))
+app.get('/', (req, res) => {
+  const loggedIn = req.session && req.session.username // 로그인 상태 확인
+  const username = req.session?.username || '' // 세션에 저장된 사용자 이름
+
+  res.sendFile(path.join(__dirname, 'public', 'index.html'))
 })
 
 // 로그인 페이지
-app.get('/login', (req,res)=>{
-    res.sendFile(path.join(__dirname, 'public', 'login.html'))
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'))
 })
 
-app.get('/signup',(req,res)=>{
-  res.sendFile(path.join(__dirname,'public', 'signup.html'))
+app.get('/signup', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'signup.html'))
 })
 
 // 방 생성 페이지
-app.get('/create-room', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'create-room.html'));
+app.get('/create-room', isAuthenticated, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'create-room.html'));
 });
 
 // 방 참가 페이지
-app.get('/join-room', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'join-room.html'));
+app.get('/join-room', isAuthenticated, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'join-room.html'));
 });
 
 /* 회원가입 요청 처리 */
-app.post('/signup', (req,res)=>{
-  const {username, password }=req.body
-  if(!username || !password) {
+app.post('/signup', (req, res) => {
+  const { username, password } = req.body
+  if (!username || !password) {
     return res.status(400).send("아이디와 비밀번호를 입력하세요.")
   }
 
   // 기존 유저 목록 불러오기
-  let users=[]
-  if(fs.existsSync(usersFile)) {
+  let users = []
+  if (fs.existsSync(usersFile)) {
     const data = fs.readFileSync(usersFile, 'utf-8')
     users = JSON.parse(data);
   }
 
   // 중복 아이디 확인
-  if (users.some(user=>user.username === username)){
+  if (users.some(user => user.username === username)) {
     return res.status(400).send('이미 존재하는 아이디입니다.')
   }
-  
+
   // 새 유저 추가
-  users.push({username, password})
-  fs.writeFileSync(usersFile, JSON.stringify(users,null,2))
+  users.push({ username, password })
+  fs.writeFileSync(usersFile, JSON.stringify(users, null, 2))
 
   res.redirect('/login')
 })
 
 // 로그인 요청 처리
-app.post('/login', (res,req)=>{
-  const {username, password} = req.body
+app.post('/login', (req, res) => {
+  console.log('Request Body:', req.body); // req.body가 어떤 값을 가지는지 출력
+  const { username, password } = req.body
 
-  if (!username || password){
+  if (!username || !password) {
     return res.status(400).send('아이디와 비밀번호를 입력하세요.')
   }
 
-  if(!fs.existsSync(usersFile)){
+  if (!fs.existsSync(usersFile)) {
     return res.status(400).send('등록된 유저가 없습니다.')
   }
 
   const users = JSON.parse(fs.readFileSync(usersFile, 'utf-8'))
   const user = users.find(user => user.username === username && user.password === password)
 
-  if (!user){
+  if (!user) {
     return res.status(401).send('아이디 또는 비밀번호가 올바르지 않습니다.')
   }
+  req.session.username = username // 세션에 사용자 정보 저장
 
   res.redirect('/')
 })
+
+// 로그아웃 요청 처리
+app.get('/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) {
+      console.error('Failed to destroy session:', err);
+      return res.status(500).send('Internal Server Error');
+    }
+    res.redirect('/'); // 로그아웃 후 메인 페이지로 리다이렉트
+  });
+});
 
 // SFU 연결
 app.use('/sfu/:room', express.static(path.join(__dirname, 'public/sfu')));
 
 // HTTPS 서버 시작
-httpsServer.listen(443, () =>{
-    console.log("listening on port 443")
+httpsServer.listen(443, () => {
+  console.log("listening on port 443")
 })
 
 const io = new Server(httpsServer)
 
-const connections = io.of('/mediasoup') 
+const connections = io.of('/mediasoup')
 
 const mediaCodecs = [
-    {
-        kind : 'audio',
-        mimeType : 'audio/opus',
-        clockRate : 48000,
-        channels: 2,
-    },
-     {
-        kind: 'video',
-        mimeType: 'video/VP8',
-        clockRate: 90000,
-        parameters: {
-            'x-google-start-bitrate': 1000,
-        }
-     }
+  {
+    kind: 'audio',
+    mimeType: 'audio/opus',
+    clockRate: 48000,
+    channels: 2,
+  },
+  {
+    kind: 'video',
+    mimeType: 'video/VP8',
+    clockRate: 90000,
+    parameters: {
+      'x-google-start-bitrate': 1000,
+    }
+  }
 ]
 
 let worker
@@ -135,18 +179,18 @@ let producers = []      // [ { socketId1, roomName1, producer, }, ... ]
 let consumers = []      // [ { socketId1, roomName1, consumer, }, ... ]
 
 const createWorker = async () => {
-    worker = await mediasoup.createWorker({
-        rtcMinPort: 10000,
-        rtcMaxPort: 10100,
-    })
-    console.log('worker pid ${worker.pid')
+  worker = await mediasoup.createWorker({
+    rtcMinPort: 10000,
+    rtcMaxPort: 10100,
+  })
+  console.log('worker pid ${worker.pid')
 
-    worker.on('died', error => {
-        console.error('mediasoup worker has died')
-        setTimeout(() => process.exit(1), 10000)
-    })
+  worker.on('died', error => {
+    console.error('mediasoup worker has died')
+    setTimeout(() => process.exit(1), 10000)
+  })
 
-    return worker
+  return worker
 }
 
 worker = createWorker()
@@ -230,7 +274,7 @@ connections.on('connection', async socket => {
     } else {
       router1 = await worker.createRouter({ mediaCodecs, })
     }
-    
+
     console.log(`Router ID: ${router1.id}`, peers.length)
 
     rooms[roomName] = {
@@ -374,7 +418,7 @@ connections.on('connection', async socket => {
   // see client's socket.emit('transport-connect', ...)
   socket.on('transport-connect', ({ dtlsParameters }) => {
     console.log('DTLS PARAMS... ', { dtlsParameters })
-    
+
     getTransport(socket.id).connect({ dtlsParameters })
   })
 
@@ -403,7 +447,7 @@ connections.on('connection', async socket => {
     // Send back to the client the Producer's id
     callback({
       id: producer.id,
-      producersExist: producers.length>1 ? true : false
+      producersExist: producers.length > 1 ? true : false
     })
   })
 

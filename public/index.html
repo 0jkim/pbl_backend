@@ -7,11 +7,38 @@
 </head>
 <body>
     <h1>Welcome to WebRTC Application</h1>
-    <p>Please select an option:</p>
-    <div>
-        <button onclick="location.href='/login'">Login</button>
-        <button onclick="location.href='/create-room'">Create Room</button>
-        <button onclick="location.href='/join-room'">Join Room</button>
+    <div id="content">
+        <p>Loading...</p>
     </div>
+    <script>
+        // 로그인 상태 확인 요청
+        fetch('/api/auth/status')
+            .then(response => response.json())
+            .then(data => {
+                const content = document.getElementById('content');
+                if (data.loggedIn) {
+                    // 로그인 상태
+                    content.innerHTML = `
+                        <p>Hello, ${data.username}!</p>
+                        <button onclick="location.href='/create-room'">Create Room</button>
+                        <button onclick="location.href='/join-room'">Join Room</button>
+                        <button onclick="location.href='/logout'">Logout</button>
+                    `;
+                } else {
+                    // 비로그인 상태
+                    content.innerHTML = `
+                        <p>You are not logged in.</p>
+                        <button onclick="location.href='/login'">Login</button>
+                        <button onclick="location.href='/signup'">Sign Up</button>
+                    `;
+                }
+            })
+            .catch(err => {
+                console.error('Error fetching auth status:', err);
+                document.getElementById('content').innerHTML = `
+                    <p>Error loading content. Please try again later.</p>
+                `;
+            });
+    </script>
 </body>
 </html>

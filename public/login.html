@@ -1,20 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+
+        form {
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        input {
+            margin: 5px 0;
+            padding: 10px;
+            width: 250px;
+            font-size: 1rem;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
 </head>
+
 <body>
-    <h1>로그인</h1>
-    <form action="/login" method="POST">
-        <label for="username">아이디:</label>
-        <input type="text" id="username" name="username" required><br>
-        <label for="password">비밀번호:</label>
-        <input type="password" id="password" name="password" required><br>
-        <button type="submit">로그인</button>
+    <h1>Login</h1>
+    <p>Please enter your username and password:</p>
+    <form id="loginForm">
+        <input type="text" id="username" name="username" placeholder="Username" required /><br>
+        <input type="password" id="password" name="password" placeholder="Password" required /><br>
+        <button type="submit">Login</button>
     </form>
-    <br>
-    <button onclick="location.href='/signup'">회원가입</button>
+    <p class="error" id="errorMessage"></p>
+    <p>Don't have an account? <a href="/signup">Sign up here</a>.</p>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault(); // 기본 폼 동작 막기
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+
+            try {
+                // 로그인 요청
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password }),
+                });
+
+                if (response.ok) {
+                    // 로그인 성공 시 메인 페이지로 이동
+                    window.location.href = '/';
+                } else {
+                    // 오류 메시지 표시
+                    const errorText = await response.text();
+                    errorMessage.textContent = errorText;
+                }
+            } catch (err) {
+                console.error('Login error:', err);
+                errorMessage.textContent = 'An error occurred. Please try again.';
+            }
+        });
+    </script>
 </body>
+
 </html>
