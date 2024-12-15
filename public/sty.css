@@ -1,0 +1,76 @@
+
+:root {
+    --app-background: #eaebf5;
+    --chat-background: #fff;
+    --main-color: #000000;
+    --message-bg: #f3f4f9;
+    --message-text: #2c303a;
+    --placeholder-text: #a2a4bc;
+    --button-bg: #fff;
+}
+
+body {
+    font-family: 'DM Sans', sans-serif;
+    background-color: var(--app-background);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.app-container {
+    background-color: var(--chat-background);
+    border-radius: 10px;
+    box-shadow: 0 5px 10px 0px rgba(0, 0, 0, 0.1);
+    padding: 32px;
+    width: 100%;
+    max-width: 400px;
+}
+
+h1 {
+    color: var(--message-text);
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    color: var(--message-text);
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+input {
+    padding: 12px;
+    margin-bottom: 16px;
+    border: 1px solid var(--message-bg);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--message-text);
+    outline: none;
+}
+
+input:focus {
+    border-color: var(--main-color);
+}
+
+button {
+    background-color: var(--main-color);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    opacity: 0.9;
+}

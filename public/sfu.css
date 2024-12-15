@@ -1,0 +1,155 @@
+#toggleCamera,
+#toggleMicrophone {
+    width: 60px;
+    height: 60px;
+    border: none;
+    border-radius: 50%;
+    background-color: #4caf50; /* 기본 초록색 */
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+#toggleCamera:active,
+#toggleMicrophone:active {
+    transform: scale(0.9);
+}
+
+#toggleCamera.off,
+#toggleMicrophone.off {
+    background-color: #ff4c4c; /* Off 상태의 빨간색 */
+}
+
+#toggleCamera.off::before,
+#toggleMicrophone.off::before {
+    content: '';
+    position: absolute;
+    width: 60%;
+    height: 5px;
+    background-color: white;
+    transform: rotate(45deg);
+    top: 50%;
+    left: 50%;
+    transform-origin: center;
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+#toggleCamera.off::after,
+#toggleMicrophone.off::after {
+    content: '';
+    position: absolute;
+    width: 60%;
+    height: 5px;
+    background-color: white;
+    transform: rotate(-45deg);
+    top: 50%;
+    left: 50%;
+    transform-origin: center;
+    transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+/* 컨트롤 버튼을 감싸는 컨테이너 */
+#controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px; /* 비디오와 버튼 사이 간격 */
+    gap: 15px; /* 버튼 간격 */
+}
+
+/* 컨트롤 버튼 */
+.control-button {
+    width: 60px;
+    height: 60px;
+    border: none;
+    border-radius: 50%;
+    background-color: #4caf50; /* 기본 초록색 */
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    position: relative;
+}
+
+.control-button:active {
+    transform: scale(0.9);
+}
+
+.control-button.off {
+    background-color: #ff4c4c; /* OFF 상태 빨간색 */
+}
+
+.control-button.off::before,
+.control-button.off::after {
+    content: '';
+    position: absolute;
+    width: 60%;
+    height: 5px;
+    background-color: white;
+    top: 50%;
+    left: 50%;
+    transform-origin: center;
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.control-button.off::after {
+    transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+/* 카메라 아이콘 배경 이미지 */
+.control-button.camera-icon {
+    background-image: url('/camera.png'); /* 카메라 이미지 경로 */
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 50%; /* 아이콘 크기 */
+}
+
+/* 마이크 아이콘 배경 이미지 */
+.control-button.microphone-icon {
+    background-image: url('/mike.png'); /* 마이크 이미지 경로 */
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 50%; /* 아이콘 크기 */
+}
+
+/* 비디오 컨테이너 */
+#videoContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* 동적 열 조정 */
+    gap: 10px;
+    justify-items: center;
+    align-items: center;
+    width: 100%; /* 부모 요소 너비 */
+    height: auto; /* 동적 높이 */
+    max-height: calc(100vh - 350px); /* 화면에서 로컬 비디오 영역 제외 */
+    overflow-y: auto; /* 스크롤 가능 */
+}
+
+/* 로컬 비디오 */
+#localVideo {
+    width: 100%; /* 비디오가 부모 요소 크기를 따라감 */
+    max-width: 400px; /* 최대 너비 */
+    aspect-ratio: 4 / 3; /* 4:3 비율 유지 */
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    object-fit: cover; /* 비율 채우기 */
+    max-height: 300px; /* 최대 높이 제한 */
+}
+
+/* 원격 비디오 */
+.remoteVideo {
+    width: 100%; /* 부모 요소에 맞게 채움 */
+    aspect-ratio: 4 / 3; /* 4:3 비율 유지 */
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    object-fit: cover; /* 비율 채우기 */
+    max-height: 300px; /* 최대 높이 제한 */
+}
