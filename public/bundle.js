@@ -20994,16 +20994,11 @@ const joinRoom = () => {
 const getLocalStream = () => {
   navigator.mediaDevices.getUserMedia({
     audio: true,
-    video: {
-      width: {
-        min: 640,
-        max: 1920,
-      },
-      height: {
-        min: 400,
-        max: 1080,
-      }
-    }
+      video: {
+    width: { ideal: 320 }, // 권장 너비
+    height: { ideal: 240 } // 권장 높이
+  }
+    
   })
     .then(streamSuccess)
     .catch(error => {
@@ -21236,13 +21231,14 @@ const connectRecvTransport = async (consumerTransport, remoteProducerId, serverC
       //append to the audio container
       newElem.innerHTML = '<audio id="' + remoteProducerId + '" autoplay></audio>'
     } else {
+      console.log("video 출력")
       //append to the video container
-      newElem.setAttribute('class', 'remoteVideo')
-      newElem.innerHTML = '<video id="' + remoteProducerId + '" autoplay class="video" ></video>'
+      newElem.setAttribute('id', 'remoteVideo')
+      newElem.innerHTML = '<video id="' + remoteProducerId + '" autoplay id="video" ></video>'
     }
 
     videoContainer.appendChild(newElem)
-
+    
     // destructure and retrieve the video track from the producer
     const { track } = consumer
 
@@ -21251,7 +21247,7 @@ const connectRecvTransport = async (consumerTransport, remoteProducerId, serverC
     // the server consumer started with media paused
     // so we need to inform the server to resume
 
-    updateGridLayout();
+    //updateGridLayout();
     socket.emit('consumer-resume', { serverConsumerId: params.serverConsumerId })
   })
 }
@@ -21267,7 +21263,11 @@ socket.on('producer-closed', ({ remoteProducerId }) => {
   consumerTransports = consumerTransports.filter(transportData => transportData.producerId !== remoteProducerId)
 
   // remove the video div element
-  videoContainer.removeChild(document.getElementById(`td-${remoteProducerId}`))
+  // videoContainer.removeChild(document.getElementById(`td-${remoteProducerId}`))
+  const videoElement = document.getElementById(remoteProducerId);
+  console.log(videoElement)
+  const parentElement = videoElement.closest('div')
+  videoContainer.removeChild(parentElement)
 })
 
 const toggleCameraButton = document.getElementById('toggleCamera');
@@ -21336,18 +21336,20 @@ document.getElementById('fileInput').addEventListener('change', async (event) =>
 
     const data = await response.json();
     const filePath = data.filePath;
-    socket.emit('sendFile', { fileName: file.name, filePath });
+    socket.emit('sendFile', { user_name:user_name, fileName: file.name, filePath:filePath });
     addFileLinkToChat('You', file.name, filePath); // 본인이 보낸 파일을 즉시 추가
   }
 });
 
-
+const user_name = sessionStorage.getItem('username');
+console.log(user_name)
 // 엔터키를 눌러 메시지 전송
 document.getElementById('messageInput').addEventListener('keypress', (event) => {
   if (event.key === 'Enter') {
+    console.log("dd")
     const message = event.target.value.trim();
     if (message) {
-      socket.emit('sendMessage', message);
+      socket.emit('sendMessage', {user_name:user_name, message:message});
       addMessageToChat('나', message);
       event.target.value = '';
     }
@@ -21355,30 +21357,37 @@ document.getElementById('messageInput').addEventListener('keypress', (event) => 
 });
 
 // 메시지 수신 처리
-socket.on('receiveMessage', (username, message) => {
-  if (username !== socket.id) { // 본인이 보낸 메시지를 서버에서 다시 받지 않도록 설정
-    addMessageToChat(username, message);
-  }
+socket.on('receiveMessage', (data) => {
+  const {user_name, message} = data
+  console.log(user_name, message)
+  // if (username !== socket.id) { // 본인이 보낸 메시지를 서버에서 다시 받지 않도록 설정
+  //   addMessageToChat(username, message);
+  // }
+  addMessageToChat(user_name, message);
 });
 
 // 파일 수신 처리
-socket.on('receiveFile', (username, fileInfo) => {
-  if (username !== socket.id) { // 본인이 보낸 파일 정보를 서버에서 다시 받지 않도록 설정
-    addFileLinkToChat(username, fileInfo.fileName, fileInfo.filePath);
+socket.on('receiveFile', (data) => {
+  const {user_name,fileName, filePath} = data;
+  if (user_name !== socket.id) { // 본인이 보낸 파일 정보를 서버에서 다시 받지 않도록 설정
+    addFileLinkToChat(user_name, fileName, filePath);
   }
 });
 
 // 채팅에 메시지 추가 함수
-function addMessageToChat(username, message) {
+function addMessageToChat(user_name, message) {
+  console.log(user_name)
+  
   const messages = document.getElementById('messages');
   const messageElement = document.createElement('div');
-  messageElement.textContent = `${username}: ${message}`;
+  messageElement.textContent = `${user_name}: ${message}`; // 여기
   messages.appendChild(messageElement);
   messages.scrollTop = messages.scrollHeight;
 }
 
 // 채팅에 파일 링크 추가 함수
-function addFileLinkToChat(username, fileName, filePath) {
+function addFileLinkToChat(user_name, fileName, filePath) {
+  console.log(fileName, filePath)
   const messages = document.getElementById('messages');
   const messageElement = document.createElement('div');
   const link = document.createElement('a');
@@ -21386,7 +21395,7 @@ function addFileLinkToChat(username, fileName, filePath) {
   link.textContent = fileName;
   link.target = '_blank';
   link.download = fileName;
-  messageElement.textContent = `${username} sent a file: `;
+  messageElement.textContent = `${user_name} sent a file: `;
   messageElement.appendChild(link);
   messages.appendChild(messageElement);
   messages.scrollTop = messages.scrollHeight;

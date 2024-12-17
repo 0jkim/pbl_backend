@@ -479,6 +479,7 @@ connections.on('connection', async socket => {
         // let all consumers to consume this producer
         producers.forEach(producerData => {
             if (producerData.socketId !== socketId && producerData.roomName === roomName) {
+                console.log(123)
                 const producerSocket = peers[producerData.socketId].socket
                 // use socket to send producer id to producer
                 producerSocket.emit('new-producer', { producerId: id })
@@ -602,18 +603,21 @@ connections.on('connection', async socket => {
         await consumer.resume()
     })
 
-    // 채팅 메시지 전송
-    socket.on('sendMessage', (message) => {
+    socket.on('sendMessage', (data) => {
         // 본인 외의 다른 모든 클라이언트에게 메시지 전송
-        socket.broadcast.emit('receiveMessage', socket.id, message);
-        console.log(`Message from ${socket.id}: ${message}`);
+        const {user_name, message} = data
+        console.log(user_name)
+        socket.broadcast.emit('receiveMessage', {user_name:user_name, message:message});
+        console.log("Message from ${socket.id}: ${message}");
     });
 
     // 파일 전송
-    socket.on('sendFile', (fileInfo) => {
+    socket.on('sendFile', (data) => {
+        const {user_name, fileName, filePath} = data;
+        console.log("test",fileName, filePath)
         // 본인 외의 다른 모든 클라이언트에게 파일 정보 전송
-        socket.broadcast.emit('receiveFile', socket.id, fileInfo);
-        console.log(`File from ${socket.id}: ${fileInfo.fileName} at ${fileInfo.filePath}`);
+        socket.broadcast.emit('receiveFile', {user_name:user_name, fileName:fileName, filePath:filePath});
+        console.log("File from ${socket.id}: ${fileInfo.fileName} at ${fileInfo.filePath}");
     });
 })
 

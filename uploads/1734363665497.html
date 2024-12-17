@@ -13,7 +13,7 @@
       href="https://fonts.googleapis.com/css?family=DM+Sans:400,500,700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/style2.css" />
+    <link rel="stylesheet" href="style2.css" />
 
   </head>
   <body>
@@ -62,21 +62,17 @@
           
 
           <!-- 원격 비디오 -->
-          <div id="videoContainer">
-            
-                      <video id="localVideo" autoplay muted></video>
-            
-      
+          <div class="videoContainer">
+              <video class="localVideo" autoplay muted></video>
               
                 <!-- 동적으로 비디오가 추가됩니다 -->
-
           </div>
 
         <div class="video-call-actions">
-          <button id="toggleCamera" onclick = "toggleAct(this)"></button>
-          <button id="toggleMicrophone" onclick = "toggleAct(this)"></button>
-          <!-- <button class="video-action-button maximize" onclick="toggleFullScreen()"></button> -->
-          <button class="video-action-button endcall" type = "button" onclick="location.href ='https://webrtc.n-e.kr'">Leave</button>
+          <button class="video-action-button mic" onclick = "toggleAct(this)"></button>
+          <button class="video-action-button camera" onclick = "toggleAct(this)"></button>
+          <button class="video-action-button maximize" onclick="toggleFullScreen()"></button>
+          <button class="video-action-button endcall" type = "button" onclick="location.href ='first.html'">Leave</button>
           <button class="video-action-button magnifier">
             <!-- ZoomIn icon -->
             <svg
@@ -139,19 +135,23 @@
           </svg>
           <!-- Close Icon -->
         </button>
-        <div id="chat-container">
+        <div class="chat-container">
           <div id="messages">
             <h3>Chat</h3>
           </div>
-          <div id="chat-area">        
+          <div class="chat-area">        
           </div>
           
-            <div id="input-container">
-              <input type="text" id="messageInput" placeholder="Type your message..."/>
+            <div class="input-container">
+              <input
+                type="text"
+                placeholder="Type your message..."
+                class="messageInput"
+              />
+              
             </div>
-
-            <input type="file" id="fileInput" />
-              <button id= "fileButton">파일 업로드</button>
+            <input type="file" class="fileInput" />
+              <button class= "fileButton">파일 업로드</button>
               
           
         </div>
@@ -192,13 +192,13 @@
         const roomName = window.location.pathname.split('/')[2] || "Unknown Room";
         roomNameElement.textContent = roomName; // 방 이름 업데이트
         const switchMode = document.querySelector('button.mode-switch'),
-        body_function = document.querySelector('body'),
+        bodyfunction = document.querySelector('body'),
         closeBtn = document.querySelector('.btn-close-right'),
         rightSide = document.querySelector('.right-side'),
         expandBtn = document.querySelector('.expand-btn');
 
         switchMode.addEventListener('click', () => {
-        body_function.classList.toggle('dark');
+        bodyfunction.classList.toggle('dark');
         });
         closeBtn.addEventListener('click', () => {
         rightSide.classList.remove('show');
@@ -208,9 +208,6 @@
         rightSide.classList.add('show');
         expandBtn.classList.remove('show');
         });
-        function toggleAct(button) {
-        button.classList.toggle("act");
-}
     </script>
   </body>
 </html>
